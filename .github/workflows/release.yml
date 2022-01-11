@@ -1,0 +1,28 @@
+name: Create release
+
+# Triggered when a tag is pushed whose name is a "v" followed by a semantic
+# version; for example, "v1.2.3"
+on:
+  push:
+    tags:
+      - v*
+
+jobs:
+  create-release:
+    name:    Create release
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+      - name: Get tag
+        id:   get-tag
+        run:  |
+          echo ::set-output name=name::${GITHUB_REF#refs/tags/}
+          echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
+      - name: Create release
+        uses: Kumodatsu/create-release-action@${{ steps.get-tag.outputs.name }}
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          tag-name:     ${{ github.ref }}
+          version:      ${{ steps.get-tag.outputs.version }}
+          release-name: Version $VERSION
