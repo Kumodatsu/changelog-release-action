@@ -14,15 +14,9 @@ jobs:
     steps:
       - name: Checkout repository
         uses: actions/checkout@v2
-      - name: Get tag
-        id:   get-tag
-        run:  |
-          echo ::set-output name=name::${GITHUB_REF#refs/tags/}
-          echo ::set-output name=version::${GITHUB_REF#refs/tags/v}
       - name: Create release
         uses: ./
         with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
-          tag-name:     ${{ github.ref }}
-          version:      ${{ steps.get-tag.outputs.version }}
-          release-name: Version $VERSION
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          tag:          ${{ github.ref }}
+          release_name: Version $VERSION
