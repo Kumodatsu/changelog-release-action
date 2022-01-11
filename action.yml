@@ -5,28 +5,32 @@ description: >
   changelog file. The changelog file must adhere to the Keep a Changelog format.
 
 inputs:
-  github-token:
+  github_token:
     description: >
       A GitHub token. This is used to create the release on the repository.
     required: true
-  tag-name:
+  tag:
     description: >
-      The name of the tag on which the release should be created.
+      The tag on which the release should be created (string starting with
+      "refs/tags/").
     required: true
   version:
     description: >
-      The semantic version number of the relevant section in the changelog.
-    required: true
-  changelog-path:
+      The semantic version number of the relevant section in the changelog. If
+      unspecified, the tag name is assumed to be the version number (possibly
+      preceded by a 'v').
+    required: false
+    default:  ""
+  changelog_path:
     description: >
       The path to the changelog file, relative to the repository root.
     required: false
     default:  "./CHANGELOG.md"
-  release-name:
+  release_name:
     description: >
       The name for the release. Use "$VERSION" to insert the version number.
     required: false
-    default:  "v$VERSION"
+    default:  "$VERSION"
   draft:
     description: >
       true to create a draft release; false to create a public release.
@@ -39,22 +43,38 @@ inputs:
     default:  "false"
 
 outputs:
-  upload-url:
+  upload_url:
     description: "The asset upload url of the created release."
     value:       ${{ steps.create-release.outputs.upload_url }}
-  changelog-section:
+  changelog_section:
     description: "The contents of the relevant section from the changelog."
     value:       ${{ steps.format-entry.outputs.value }}
 
 runs:
   using: "composite"
   steps:
+    - name: Get tag name
+      id:   get-tag
+      uses: ashley-taylor/regex-property-action@1.2
+      with:
+        value:       ${{ inputs.tag }}
+        regex:       "^refs\\/tags\\/v?(.+)$"
+        flags:       g
+        replacement: "$1"
+    - name: Get version number
+      id:   get-version
+      uses: ashley-taylor/regex-property-action@1.2
+      with:
+        value:       ${{ inputs.version }}
+        regex:       "(^$)"
+        flags:       g
+        replacement: ${{ steps.get-tag.outputs.value }}
     - name: Get relevant changelog entry
       id:   get-entry
       uses: mindsers/changelog-reader-action@v2
       with:
-        version: ${{ inputs.version }}
-        path:    ${{ inputs.changelog-path }}
+        version: ${{ steps.get-version.outputs.value }}
+        path:    ${{ inputs.changelog_path }}
     - name: Format changelog entry
       id:   format-entry
       uses: ashley-taylor/regex-property-action@1.2
@@ -67,7 +87,7 @@ runs:
       id:   format-release-name
       uses: ashley-taylor/regex-property-action@1.2
       with:
-        value:       ${{ inputs.release-name }}
+        value:       ${{ inputs.release_name }}
         regex:       "(\\$VERSION)"
         flags:       g
         replacement: ${{ steps.get-entry.outputs.version }}
@@ -75,10 +95,10 @@ runs:
       id:   create-release
       uses: actions/create-release@v1
       with:
-        tag_name:     ${{ inputs.tag-name }}
+        tag_name:     ${{ inputs.tag }}
         release_name: ${{ steps.format-release-name.outputs.value }}
         body:         ${{ steps.format-entry.outputs.value }}
         draft:        ${{ inputs.draft }}
         prerelease:   ${{ inputs.prerelease }}
       env:
-        GITHUB_TOKEN: ${{ inputs.github-token }}
+        GITHUB_TOKEN: ${{ inputs.github_token }}
