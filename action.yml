@@ -1,0 +1,71 @@
+name:   "Changelog Release Action"
+author: "Kumodatsu"
+description: >
+  A GitHub action to create GitHub releases that pulls the release notes from a
+  changelog file. The changelog file must adhere to the Keep a Changelog format.
+
+inputs:
+  github-token:
+    description: >
+      A GitHub token. This is used to create the release on the repository.
+    required: true
+  tag-name:
+    description: >
+      The name of the tag on which the release should be created.
+    required: true
+  version:
+    description: >
+      The semantic version number of the relevant section in the changelog.
+    required: true
+  changelog-path:
+    description: >
+      The path to the changelog file.
+    required: false
+    default:  "./CHANGELOG.md"
+  draft:
+    description: >
+      true to create a draft release; false to create a public release.
+    required: false
+    default:  "false"
+  prerelease:
+    description: >
+      true to mark the release as a prerelease; false otherwise.
+    required: false
+    default:  "false"
+
+outputs:
+  upload-url:
+    description: "The asset upload url of the created release."
+    value:       ${{ steps.create-release.outputs.upload_url }}
+  changelog-section:
+    description: "The contents of the relevant section from the changelog."
+    value:       ${{ steps.format-entry.outputs.value }}
+
+runs:
+  using: "composite"
+  steps:
+    - name: Get relevant changelog entry
+      id:   get-entry
+      uses: mindsers/changelog-reader-action@v2
+      with:
+        version: ${{ inputs.version }}
+        path:    ${{ inputs.changelog-path }}
+    - name: Format changelog entry
+      id:   format-entry
+      uses: ashley-taylor/regex-property-action@1.2
+      with:
+        value:       ${{ steps.get-entry.outputs.changes }}
+        regex:       "([^\n])(?:\n)([^-\n])"
+        flags:       g
+        replacement: "$1 $2"
+    - name: Create release
+      id:   create-release
+      uses: actions/create-release@v1
+      with:
+        tag_name:     ${{ inputs.tag-name }}
+        release_name: Version ${{ steps.get-entry.outputs.version }}
+        body:         ${{ steps.format-entry.outputs.value }}
+        draft:        ${{ inputs.draft }}
+        prerelease:   ${{ inputs.prerelease }}
+      env:
+        GITHUB_TOKEN: ${{ inputs.github-token }}
