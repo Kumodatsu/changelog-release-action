@@ -19,9 +19,14 @@ inputs:
     required: true
   changelog-path:
     description: >
-      The path to the changelog file.
+      The path to the changelog file, relative to the repository root.
     required: false
     default:  "./CHANGELOG.md"
+  release-name:
+    description: >
+      The name for the release. Use "$VERSION" to insert the version number.
+    required: false
+    default:  "v$VERSION"
   draft:
     description: >
       true to create a draft release; false to create a public release.
@@ -58,12 +63,20 @@ runs:
         regex:       "([^\n])(?:\n)([^-\n])"
         flags:       g
         replacement: "$1 $2"
+    - name: Format release name
+      id:   format-release-name
+      uses: ashley-taylor/regex-property-action@1.2
+      with:
+        value:       ${{ inputs.release-name }}
+        regex:       "(\\$VERSION)"
+        flags:       g
+        replacement: ${{ steps.get-entry.outputs.version }}
     - name: Create release
       id:   create-release
       uses: actions/create-release@v1
       with:
         tag_name:     ${{ inputs.tag-name }}
-        release_name: Version ${{ steps.get-entry.outputs.version }}
+        release_name: ${{ steps.format-release-name.outputs.value }}
         body:         ${{ steps.format-entry.outputs.value }}
         draft:        ${{ inputs.draft }}
         prerelease:   ${{ inputs.prerelease }}
