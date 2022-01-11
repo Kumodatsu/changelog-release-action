@@ -18,7 +18,7 @@ being released. The changelog must adhere to the format used in
         <th>Description</th>
     </tr>
     <tr>
-        <td>github-token</td>
+        <td>github_token</td>
         <td>Yes</td>
         <td>N/A</td>
         <td>
@@ -27,24 +27,26 @@ being released. The changelog must adhere to the format used in
         </td>
     </tr>
     <tr>
-        <td>tag-name</td>
+        <td>tag</td>
         <td>Yes</td>
         <td>N/A</td>
         <td>
-            The name of the tag on which the release should be created.
+            The tag on which the release should be created (string starting with
+            "refs/tags/").
         </td>
     </tr>
     <tr>
         <td>version</td>
-        <td>Yes</td>
+        <td>No</td>
         <td>N/A</td>
         <td>
             The semantic version number of the relevant section in the
-            changelog.
+            changelog. If unspecified, the tag name is assumed to be the version
+            number (possibly preceded by a 'v').
         </td>
     </tr>
     <tr>
-        <td>changelog-path</td>
+        <td>changelog_path</td>
         <td>No</td>
         <td>"./CHANGELOG.md"</td>
         <td>
@@ -52,9 +54,9 @@ being released. The changelog must adhere to the format used in
         </td>
     </tr>
     <tr>
-        <td>release-name</td>
+        <td>release_name</td>
         <td>No</td>
-        <td>"v$VERSION"</td>
+        <td>"$VERSION"</td>
         <td>
             The name for the release. Use "$VERSION" to insert the version
             number.
@@ -85,13 +87,13 @@ being released. The changelog must adhere to the format used in
         <th>Description</th>
     </tr>
     <tr>
-        <td>upload-url</td>
+        <td>upload_url</td>
         <td>
             The asset upload url of the created release.
         </td>
     </tr>
     <tr>
-        <td>changelog-section</td>
+        <td>changelog_section</td>
         <td>
             The contents of the relevant section from the changelog.
         </td>
@@ -99,8 +101,8 @@ being released. The changelog must adhere to the format used in
 </table>
 
 ### Example usage
-See this repository's [`.github/workflows/release.yml`][2] file for a simple example
-on how to use this action in a workflow.
+See this repository's [`.github/workflows/release.yml`][2] file for a simple
+example on how to use this action in a workflow.
 
 [1]: <https://keepachangelog.com/>
 [2]: <https://github.com/Kumodatsu/changelog-release-action/blob/master/.github/workflows/release.yml>
